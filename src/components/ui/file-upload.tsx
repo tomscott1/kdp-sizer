@@ -77,7 +77,7 @@ const FileUploaderComponent = () => {
       });
 
       try {
-        statusInterval = setInterval(pollUploadStatus, 100); // Poll every second
+        statusInterval = setInterval(pollUploadStatus, 1000); // Poll every second
         const response = await axios.post('/api/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
