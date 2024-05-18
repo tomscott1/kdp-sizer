@@ -11,8 +11,6 @@ import { Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 
-import handleProcess from "@/lib/process";
-
 const FileSvgDraw = () => {
   return (
     <>
