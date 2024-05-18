@@ -9,10 +9,7 @@ import {
 } from "@/components/extension/file-upload";
 import { Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import path from "path";
 import axios from "axios";
-// import { promises as fs } from 'fs';
-// import { writeFile } from "fs/promises";
 
 import handleProcess from "@/lib/process";
 
@@ -57,6 +54,20 @@ const FileUploaderComponent = () => {
     },
   };
 
+  const pollUploadStatus = async () => {
+    try {
+      const response = await axios.get('/api/upload-status');
+      console.log('Upload status:', response.data);
+      if (response.data.status === 'completed' || response.data.status === 'error') {
+        clearInterval(statusInterval);
+      }
+    } catch (error) {
+      console.error('Error fetching upload status:', error);
+      clearInterval(statusInterval);
+    }
+  };
+
+  let statusInterval: NodeJS.Timeout;
 
   const handleUploadClick = async () => {
     if (files && files.length > 0) {
@@ -66,7 +77,7 @@ const FileUploaderComponent = () => {
       });
 
       try {
-        console.log('trying api')
+        statusInterval = setInterval(pollUploadStatus, 100); // Poll every second
         const response = await axios.post('/api/upload', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -75,10 +86,10 @@ const FileUploaderComponent = () => {
         console.log('Files uploaded successfully:', response.data);
       } catch (error) {
         console.error('Error uploading files:', error);
+        clearInterval(statusInterval);
       }
     }
   };
-
 
   return (
     <div>

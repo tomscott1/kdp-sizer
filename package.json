@@ -6,6 +6,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "purge": "rm ./public/uploads/*",
     "fastapi-dev": "pip install -r requirements.txt && python -m uvicorn src.app.api.index:app --reload",
     "next-dev": "source .env && next dev",
     "dev": "concurrently \"npm run next-dev\" \"npm run fastapi-dev\""
