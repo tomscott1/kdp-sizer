@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   FileUploader,
   FileUploaderContent,
@@ -9,7 +9,8 @@ import {
 } from "@/components/extension/file-upload";
 import { Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import axios from "axios";
+import { type PutBlobResult } from '@vercel/blob';
+import { upload } from '@vercel/blob/client';
 
 const FileSvgDraw = () => {
   return (
@@ -33,15 +34,15 @@ const FileSvgDraw = () => {
         <span className="font-semibold">Click to upload</span>
         &nbsp; or drag and drop
       </p>
-      <p className="text-xs text-gray-500 dark:text-gray-400">
-        PDF
-      </p>
+      <p className="text-xs text-gray-500 dark:text-gray-400">PDF</p>
     </>
   );
 };
 
 const FileUploaderComponent = () => {
   const [files, setFiles] = useState<File[] | null>(null);
+  const [blobUrls, setBlobUrls] = useState<PutBlobResult[]>([]);
+  const inputFileRef = useRef<HTMLInputElement>(null);
 
   const dropZoneConfig = {
     maxFiles: 5,
@@ -52,39 +53,24 @@ const FileUploaderComponent = () => {
     },
   };
 
-  const pollUploadStatus = async () => {
-    try {
-      const response = await axios.get('/api/upload-status');
-      console.log('Upload status:', response.data);
-      if (response.data.status === 'completed' || response.data.status === 'error') {
-        clearInterval(statusInterval);
-      }
-    } catch (error) {
-      console.error('Error fetching upload status:', error);
-      clearInterval(statusInterval);
-    }
-  };
-
-  let statusInterval: NodeJS.Timeout;
-
   const handleUploadClick = async () => {
     if (files && files.length > 0) {
-      const formData = new FormData();
-      files.forEach((file) => {
-        formData.append('files', file);
-      });
-
       try {
-        statusInterval = setInterval(pollUploadStatus, 1000); // Poll every second
-        const response = await axios.post('/api/upload', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
-        console.log('Files uploaded successfully:', response.data);
+        const newBlobUrls: PutBlobResult[] = [];
+
+        for (const file of files) {
+          const newBlob = await upload(file.name, file, {
+            access: 'public',
+            handleUploadUrl: '/api/input-file-upload', // This should match route
+          });
+
+          newBlobUrls.push(newBlob);
+        }
+
+        setBlobUrls(newBlobUrls);
+        console.log('Files uploaded successfully:', newBlobUrls);
       } catch (error) {
         console.error('Error uploading files:', error);
-        clearInterval(statusInterval);
       }
     }
   };
@@ -114,18 +100,22 @@ const FileUploaderComponent = () => {
         </FileUploaderContent>
       </FileUploader>
       <div>
-          {files && files.length > 0 && (
-            <Button
-              variant="outline"
-              onClick={handleUploadClick}
-            >
-              Process
-            </Button>
-          )}
+        {files && files.length > 0 && (
+          <Button variant="outline" onClick={handleUploadClick}>
+            Upload
+          </Button>
+        )}
       </div>
+      {blobUrls.length > 0 && (
+        <div className="mt-4">
+          {blobUrls.map((blob, index) => (
+            <div key={index}>
+              Blob URL: <a href={blob.url} target="_blank" rel="noopener noreferrer">{blob.url}</a>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
-
-
   );
 };
 

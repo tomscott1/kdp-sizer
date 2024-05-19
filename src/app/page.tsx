@@ -1,5 +1,4 @@
 'use client'
-import Image from "next/image";
 import { ModeToggle } from "@/components/ui/dark-mode";
 import { Button } from "@/components/ui/button"
 import FileUploadDropzone from "@/components/ui/file-upload"; 
@@ -10,10 +9,6 @@ export default function Home() {
     fetch('api/healthcheck', { method: 'GET' })
         .then(response => response.json())
         .then(data => console.log(data))
-  }
-
-  function processFiles() {
-    console.log('process....')
   }
 
   return (
