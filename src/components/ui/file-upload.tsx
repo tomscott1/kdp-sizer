@@ -69,6 +69,19 @@ const FileUploaderComponent = () => {
 
         setBlobUrls(newBlobUrls);
         console.log('Files uploaded successfully:', newBlobUrls);
+
+        const downloadUrls = newBlobUrls.map(blob => ({ url: blob.downloadUrl, pathname: blob.pathname }));
+        // send to python
+        await fetch('/api/download-input-files', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ urls: downloadUrls }),
+        })
+        .then(response => response.json())
+        .then(data => console.log(data))
+
       } catch (error) {
         console.error('Error uploading files:', error);
       }
